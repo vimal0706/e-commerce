@@ -1,0 +1,51 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Checkout') {
+            steps {
+                // Checkout code from Git
+                git branch: 'main', url: 'https://github.com/your-repo/your-project.git'
+            }
+        }
+        
+        stage('Build') {
+            steps {
+                // Build with Maven
+                sh 'mvn clean install'
+            }
+        }
+        
+        stage('SonarQube Analysis') {
+            environment {
+                SONARQUBE_URL = 'http://your-sonarqube-server'
+            }
+            steps {
+                withSonarQubeEnv('SonarQube') {
+                    sh 'mvn sonar:sonar'
+                }
+            }
+        }
+        
+        stage('Docker Build') {
+            steps {
+                // Build Docker image
+                sh 'docker build -t your-docker-image-name .'
+            }
+        }
+        
+        stage('Deploy') {
+            steps {
+                // Run Docker container
+                sh 'docker run -d -p 8081:8081 your-docker-image-name'
+            }
+        }
+    }
+    
+    post {
+        always {
+            // Clean up the workspace
+            cleanWs()
+        }
+    }
+}
